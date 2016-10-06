@@ -4,6 +4,7 @@ import nltk
 from nltk.util import ngrams
 from nltk.parse.stanford import StanfordParser
 from nltk.parse.stanford import StanfordDependencyParser
+from sklearn import svm
 
 path_to_jar = 'C:\Users\t_quacd\AppData\Local\stanford-parser-full-2015-12-09/stanford-parser.jar'
 path_to_models_jar = 'C:\Users\t_quacd\AppData\Local\stanford-parser-full-2015-12-09/stanford-parser-3.6.0-models.jar'
@@ -72,13 +73,8 @@ def sentimental_extraction(sentence):  # input is a string
 def main():
     with open('restaurants-trial.xml', 'r') as f:
         sentences = re.findall(r'<text>(.*)</', f.read())
-    print sentences
-    if sentiment > 0:
-        aspectTerm.polarity = 'positive'
-    elif sentiment == 0:
-        aspectTerm.polarity = 'neutral'
-    else:
-        aspectTerm.polarity = 'negative'
+    clf = svm.SVC()
+    
 
 
 if __name__ == "__main__":
