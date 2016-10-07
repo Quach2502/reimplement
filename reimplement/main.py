@@ -1,10 +1,11 @@
 import re
 from nltk.corpus import sentiwordnet as swn
 import nltk
-from nltk.util import ngrams
+from nltk import ngrams
 from nltk.parse.stanford import StanfordParser
 from nltk.parse.stanford import StanfordDependencyParser
 from sklearn import svm
+import string
 
 path_to_jar = 'C:\Users\t_quacd\AppData\Local\stanford-parser-full-2015-12-09/stanford-parser.jar'
 path_to_models_jar = 'C:\Users\t_quacd\AppData\Local\stanford-parser-full-2015-12-09/stanford-parser-3.6.0-models.jar'
@@ -12,70 +13,119 @@ parser = StanfordParser(model_path="edu/stanford/nlp/models/lexparser/englishPCF
 dep_parser = StanfordDependencyParser(model_path="edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz")
 
 
-def surface_context(sentence, from_index, to_index,window_size):  # from_index is the begin of the aspect term in sentence
-    if from_index - window_size > 0:
-        window_begin = from_index - window_size
-    else:
-        window_begin = 0
-    if to_index + window_size <= len(sentence.text):
-        window_end = to_index + window_size
-    else:
-        window_end = len(sentence.text)
-    window = sentence[window_begin:window_end]
-    return window
+def NRC_lexicon():
+    with open('NRC-emotion-lexicon-wordlevel-alphabetized-v0.92.txt', 'r') as f:
+        sentences = f.readlines()
+        dict = []
+        for sentence in sentences:
+            if (('1' in sentence) & (('positive' in sentence) | ('negative' in sentence))):
+                sentence = sentence.translate(string.maketrans("\t", " "))
+                sentence = sentence.translate(string.maketrans("\n", " "))
+                sentence = sentence.split(' ')
+                dict.append((sentence[0], sentence[1]))
+    print len(dict)
+    return dict
 
+def MPQA_lexicon():
+    with open('subjclueslen1-HLTEMNLP05.txt', 'r') as f:
+        sentences = f.readlines()
+        dict = []
+        for sentence in sentences:
+            if (('1' in sentence) & (('positive' in sentence) | ('negative' in sentence))):
+                sentence = sentence.translate(string.maketrans("=", " "))
+                sentence = sentence.translate(string.maketrans("\n", " "))
+                sentence = sentence.split(' ')
+                if ((sentence[-2] == ('positive')) |( sentence[-2] == 'negative')): #ignore neutral word for now
+                    dict.append((sentence[5], sentence[-2]))
+    print len(dict)
+    return dict
 
-def lexicon_feature(sentence):  # use wordsentinet to calculate sentimental score. For PMI will do later.
-    tokens = nltk.word_tokenize(sentence)
-    pos_tokens = nltk.pos_tag(tokens)
-    number_pos = 0
-    number_neg = 0
-    sum_sentimental = 0
-    for pos_token in pos_tokens:
-        score = 0
-        if 'NN' in pos_token[1] and len(swn.senti_synsets(pos_token[0], 'n')) > 0:
-            score = (list(swn.senti_synset(pos_token[0], 'n'))[0]).pos_score() - (list(swn.senti_synsets(pos_token[0], 'n'))[0]).neg_score()
-        elif 'VB' in pos_token[1] and len(swn.senti_synsets(pos_token[0], 'v')) > 0:
-            score = (list(swn.senti_synset(pos_token[0], 'v'))[0]).pos_score() - (list(swn.senti_synsets(pos_token[0], 'v'))[0]).neg_score()
-        elif 'JJ' in pos_token[1] and len(swn.senti_synsets(pos_token[0], 'a')) > 0:
-            score = (list(swn.senti_synset(pos_token[0], 'a'))[0]).pos_score() - (list(swn.senti_synsets(pos_token[0], 'a'))[0]).neg_score()
-        elif 'RB' in pos_token[1] and len(swn.senti_synsets(pos_token[0], 'r')) > 0:
-            score = (list(swn.senti_synset(pos_token[0], 'r'))[0]).pos_score() - (list(swn.senti_synsets(pos_token[0], 'r'))[0]).neg_score()
-        else:
-            continue
-        sum_sentimental += score
-        if score > 0:
-            number_neg += 1
-        else:
-            number_pos += 1
-        if 'not' in tokens:
-            sum_sentimental *= -1
-    return number_pos,number_neg,sum_sentimental
+def BL_lexicon():
+    dict = []
+    with open('negative-words.txt', 'r') as f:
+        sentences = f.readlines()
+        for sentence in sentences:
+            sentence = sentence.translate(string.maketrans("\n", " "))
+            dict.append((sentence,'negative'))
+    with open('positive-words.txt', 'r') as f:
+        sentences = f.readlines()
+        for sentence in sentences:
+            sentence = sentence.translate(string.maketrans("\n", " "))
+            dict.append((sentence,'positive'))
+    print len(dict)
+    return dict
 
-def surface_feature(window,aspect_term):
-    resullt = []
-    window = nltk.word_token(window)
-    for word in window:
-        result.append(word)
-        if word != aspect_term:
-            result.append(word+aspect_term)
-    bigrams = ngrams(window,2)
-    result += bigrams
-    return result
-
-
-def parse_feature():
-
-
-def sentimental_extraction(sentence):  # input is a string
-
+def sentimental_lexicon_ood(): #out of domain lexicons
+    dict = []
+    dict = BL_lexicon() + MPQA_lexicon() + NRC_lexicon()
+    return dict
+#
+#
+#
+# def surface_context(sentence, from_index, to_index,window_size):  # from_index is the begin of the aspect term in sentence
+#     if from_index - window_size > 0:
+#         window_begin = from_index - window_size
+#     else:
+#         window_begin = 0
+#     if to_index + window_size <= len(sentence.text):
+#         window_end = to_index + window_size
+#     else:
+#         window_end = len(sentence.text)
+#     window = sentence[window_begin:window_end]
+#     return window
+#
+#
+# def lexicon_feature(sentence):  # use wordsentinet to calculate sentimental score. For PMI will do later.
+#     tokens = nltk.word_tokenize(sentence)
+#     postag_tokens = nltk.pos_tag(tokens)
+#     number_pos = 0
+#     number_neg = 0
+#     sum_sentimental = 0
+#     for postag_token in postag_tokens:
+#         score = 0
+#         if 'NN' in postag_token[1] and len(swn.senti_synsets(pos_token[0], 'n')) > 0:
+#             score = (list(swn.senti_synset(postag_token[0], 'n'))[0]).pos_score() - (list(swn.senti_synsets(postag_token[0], 'n'))[0]).neg_score()
+#         elif 'VB' in postag_token[1] and len(swn.senti_synsets(postag_token[0], 'v')) > 0:
+#             score = (list(swn.senti_synset(postag_token[0], 'v'))[0]).pos_score() - (list(swn.senti_synsets(postag_token[0], 'v'))[0]).neg_score()
+#         elif 'JJ' in pos_token[1] and len(swn.senti_synsets(pos_token[0], 'a')) > 0:
+#             score = (list(swn.senti_synset(postag_token[0], 'a'))[0]).pos_score() - (list(swn.senti_synsets(postag_token[0], 'a'))[0]).neg_score()
+#         elif 'RB' in pos_token[1] and len(swn.senti_synsets(pos_token[0], 'r')) > 0:
+#             score = (list(swn.senti_synset(postag_token[0], 'r'))[0]).pos_score() - (list(swn.senti_synsets(postag_token[0], 'r'))[0]).neg_score()
+#         else:
+#             continue
+#         sum_sentimental += score
+#         if score > 0:
+#             number_neg += 1
+#         else:
+#             number_pos += 1
+#         if 'not' in tokens:
+#             sum_sentimental *= -1
+#     return number_pos,number_neg,sum_sentimental
+#
+# def surface_feature(window,aspect_term):
+#     result = []
+#     window = nltk.word_tokenize(window)
+#     for word in window:
+#         result.append(word)
+#         if word != aspect_term:
+#             result.append(word+aspect_term)
+#     bigrams = ngrams(window,2)
+#     for bigram in bigrams:
+#         result.append(bigram)
+#     return result
+#
+#
+# def parse_feature():
+#
+#
+# def sentimental_extraction(sentence):  # input is a string
+#
 
 def main():
     with open('restaurants-trial.xml', 'r') as f:
         sentences = re.findall(r'<text>(.*)</', f.read())
     clf = svm.SVC()
-    
-
-
+    print '20055'
+    sentimental_lexicon_ood()
 if __name__ == "__main__":
     main()
