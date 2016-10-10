@@ -4,11 +4,17 @@ import nltk
 from nltk import ngrams
 from nltk.parse.stanford import StanfordParser
 from nltk.parse.stanford import StanfordDependencyParser
-from sklearn import svm
+from sklearn.svm import LinearSVC
 import string
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer,CountVectorizer
+from sklearn.preprocessing import Normalizer
+from sklearn.cross_validation import train_test_split
+from sklearn.metrics import accuracy_score
 from nltk.corpus import stopwords
-
+from xml.etree import ElementTree as ET
+from scipy.sparse import csr_matrix
+from scipy.sparse import hstack
+import numpy as np
 path_to_jar = 'C:\Users\t_quacd\AppData\Local\stanford-parser-full-2015-12-09/stanford-parser.jar'
 path_to_models_jar = 'C:\Users\t_quacd\AppData\Local\stanford-parser-full-2015-12-09/stanford-parser-3.6.0-models.jar'
 parser = StanfordParser(model_path="edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz")
@@ -85,8 +91,8 @@ def surface_context(sentence, aspect_term, window_size):  # from_index is the be
     return window
 
 
-def parse_context(sentence, from_index, to_index):
-    return result
+# def parse_context(sentence, from_index, to_index):
+#     return result
 
 
 def lexicon_feature(sentence):
@@ -147,23 +153,51 @@ def sentence_transform(sentence, aspect_term, window_size):
             result.append(aspect_term + "_" + window[i] + "_ct")
     bigrams = ngrams(window, 2)
     for bigram in bigrams:
-        result.append(bigram[0] +"_"+bigram[1])
+        result.append(bigram[0] + "_" + bigram[1])
+    result.append(aspect_term+"_at")
     return ' '.join(result)
 
 
 # def parse_feature(sentence):
-#
-#
-#
-def tokenize(sentence):
-    return surface_feature(sentence) + lexicon_feature(sentence) + parse_feature(sentence)
+def GetYFromStringLabels (Labels):
+    Y = []
+    for L in Labels:
+        if 'positive' == L:
+            Y.append(1)
+        elif 'negative' == L:
+            Y.append(-1)
+        elif 'neutral' == L:
+            Y.append(0)
+        elif 'conflict' == L:
+            Y.append(2)
+        else:
+            Y.append(0)
+    return Y
 
 
 def preprocessData():
-    with open('restaurants-trial.xml', 'r') as f:
-        sentences = re.findall(r'<sentence (.*)</', f.read().translate(string.maketrans("\n", " ")))
-    print sentences
-    return
+    polarity = []
+    text = []
+    tree = ET.parse('Restaurants_Train.xml')
+    root = tree.getroot()
+    for sentence in root.findall('sentence'):
+        if sentence.find('aspectTerms') is None:
+            continue
+        content = sentence.find('text').text.translate(string.maketrans("", ""),string.punctuation)
+        for aspectTerms in sentence.iter('aspectTerms'):
+            for aspectTerm in aspectTerms.iter('aspectTerm'):
+                text.append(sentence_transform(content,aspectTerm.get('term').translate(string.maketrans("", ""),string.punctuation),8))
+                polarity.append(aspectTerm.get("polarity"))
+    LexFeats = [lexicon_feature(Sent) for Sent in text]
+    LexFeats = np.array(LexFeats)
+    LexFeats = csr_matrix(LexFeats)
+    CountVecter = CountVectorizer( dtype=np.float64, binary=False,max_df=0.95)
+    Y = GetYFromStringLabels(polarity)
+    X = CountVecter.fit_transform(text)
+    X = Normalizer().fit_transform(X)
+    print 'shape of X matrix before adding lex feats', X.shape
+    X = hstack([X, LexFeats])
+    print 'shape of X matrix after adding lex feats', X.shape
     # vectorizer
     # vectorizer = TfidfVectorizer(tokenizer=tokenize, sublinear_tf=True, ngram_range=(1, 1),
     #                              stop_words=stopwords,
@@ -174,7 +208,6 @@ def preprocessData():
 
 
 def main():
-    print sentence_transform('I like the good movie very much but the service is terrible', 'movie', 3)
     preprocessData()
     # features_train, features_test, labels_train, labels_test = preprocessData()
     # clf = svm.SVC()
