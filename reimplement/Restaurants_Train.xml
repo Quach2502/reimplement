@@ -349,7 +349,7 @@
     <sentence id="388">
         <text>this little place has a cute interior decor and affordable city prices.</text>
         <aspectTerms>
-            <aspectTerm term="interior deco" polarity="positive" from="29" to="42"/>
+            <aspectTerm term="interior decor" polarity="positive" from="29" to="42"/>
             <aspectTerm term="prices" polarity="positive" from="64" to="70"/>
         </aspectTerms>
         <aspectCategories>
