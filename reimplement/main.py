@@ -74,8 +74,8 @@ def BL_lexicon():
     return dict
 
 
-def position_aspectTerm(sentence, aspect_term, from_char,
-                        to_char):  # Return the position of aspect term in a given sentence with given from/to positions of character
+def PositionOfAspectTerm(sentence, aspect_term, from_char,
+                         to_char):  # Return the position of aspect term in a given sentence with given from/to positions of character
     list_sentence = sentence.split()
     from_index = 0
     to_index = 0
@@ -101,10 +101,10 @@ def position_aspectTerm(sentence, aspect_term, from_char,
     return from_index, to_index
 
 
-def surface_context(sentence, aspect_term, from_char, to_char,
-                    window_size):  # from_char, to_char is the begin/ end of the aspect term in list sentence.split() extracted from data
+def SurfaceContext(sentence, aspect_term, from_char, to_char,
+                   window_size):  # from_char, to_char is the begin/ end of the aspect term in list sentence.split() extracted from data
     list_sentence = sentence.split()
-    from_index, to_index = position_aspectTerm(sentence, aspect_term, from_char, to_char)
+    from_index, to_index = PositionOfAspectTerm(sentence, aspect_term, from_char, to_char)
     if (from_index - window_size > 0):
         window_begin = from_index - window_size
     else:
@@ -118,8 +118,8 @@ def surface_context(sentence, aspect_term, from_char, to_char,
     return window  # Return a list of n words surrounding the aspect term, n is window_size
 
 
-def parse_context(sentence, aspect_term, from_char, to_char):
-    from_index, to_index = position_aspectTerm(sentence, aspect_term, from_char, to_char)
+def ParseContext(sentence, aspect_term, from_char, to_char):
+    from_index, to_index = PositionOfAspectTerm(sentence, aspect_term, from_char, to_char)
     source_fromIndex = str(from_index + 1)
     source_toIndex = str(to_index + 1)
     parse_sent = dep_parser.raw_parse(sentence)
@@ -140,21 +140,25 @@ def parse_context(sentence, aspect_term, from_char, to_char):
             each = each.split()
             G.add_node(each[0], name=each[-1])
     name_attribute = nx.get_node_attributes(G, 'name')
-    parse_context_fromIndex = nx.single_source_shortest_path_length(G, source_fromIndex, cutoff=3)
-    for each in parse_context_fromIndex.keys():
-        condition = int(each)
-        if (condition > 0 and (condition <= (from_index+1) or condition >= (to_index+1))):
-            context.append(name_attribute[each])
-    if (to_index != from_index):
-        parse_context_toIndex = nx.single_source_shortest_path_length(G, source_toIndex, cutoff=3)
-        for each in parse_context_toIndex.keys():
+    try:
+        parse_context_fromIndex = nx.single_source_shortest_path_length(G, source_fromIndex, cutoff=3)
+        for each in parse_context_fromIndex.keys():
             condition = int(each)
-            if (condition > 0 and (condition < (from_index + 1) or condition > (to_index + 1))):
+            if (condition > 0 and (condition <= (from_index+1) or condition >= (to_index+1))):
                 context.append(name_attribute[each])
+        if to_index != from_index:
+            parse_context_toIndex = nx.single_source_shortest_path_length(G, source_toIndex, cutoff=3)
+            for each in parse_context_toIndex.keys():
+                condition = int(each)
+                if (condition > 0 and (condition < (from_index + 1) or condition > (to_index + 1))):
+                    context.append(name_attribute[each])
+    except:
+        print sentence
+        pass
     return list(set(context))  # Return the nodes (words) in the parse tree that are connected to the aspect term by at most three edges
 
 
-def lexicon_feature(sentence):
+def LexiconFeatures(sentence):
     MPQA_dict = MPQA_lexicon()
     BL_dict = BL_lexicon()
     NRC_dict = NRC_lexicon()
@@ -190,8 +194,8 @@ def lexicon_feature(sentence):
     return result
 
 
-def surface_feature(sentence, aspect_term, from_char, to_char, window_size):
-    window = surface_context(sentence, aspect_term, from_char, to_char, window_size)
+def SurfaceFeatures(sentence, aspect_term, from_char, to_char, window_size):
+    window = SurfaceContext(sentence, aspect_term, from_char, to_char, window_size)
     sentence_window = ' '.join(window)
     slice = sentence_window.partition(aspect_term)
     result = []
@@ -210,8 +214,8 @@ def surface_feature(sentence, aspect_term, from_char, to_char, window_size):
     return result  # Return a list of surface features
 
 
-def parse_feature(sentence,aspect_term,from_char,to_char):
-    context = parse_context(sentence,aspect_term,from_char,to_char)
+def ParseFeatures(sentence, aspect_term, from_char, to_char):
+    parseContext = ParseContext(sentence, aspect_term, from_char, to_char)
     # dict_postag = {'word1':'POSTAG1','word2':'POSTAG2'}
     result = []
     dict_postag = {}
@@ -219,22 +223,23 @@ def parse_feature(sentence,aspect_term,from_char,to_char):
     # Create a dictionary with words as keys and POS_TAG as values
     for each in postag:
         dict_postag[each[0]] = each[1]
-    for each in context:
+    for each in parseContext:
         result.append(each + '_'+ dict_postag[each]) # Word_POSTAG in the parse context
     slice = sentence.partition(aspect_term)
-    for word in context:
+    for word in parseContext:
         # Determine whether the word is before or after the aspect term to form the correct bigrams context target
         if word in slice[0]:
             result.append(word + "_" + aspect_term + "_ct")
         elif word in slice[2]:
             result.append(aspect_term + "_" + word + "_ct")
+    return result
 
 
-
-def sentence_transform(sentence, aspect_term, from_char, to_char, window_size):
-    surfaceFeats = surface_feature(sentence, aspect_term, from_char, to_char, window_size)
-    parseFeats = parse_feature(sentence, aspect_term, from_char, to_char)
-    return ' '.join(surfaceFeats + parseFeats)
+def SentenceTransform(sentence, aspect_term, from_char, to_char, window_size):
+    # surface_feats = SurfaceFeatures(sentence, aspect_term, from_char, to_char, window_size)
+    parse_feats = ParseFeatures(sentence, aspect_term, from_char, to_char)
+    # return ' '.join(surface_feats + parse_feats)
+    return ' '.join(parse_feats)
 
 
 def GetYFromStringLabels(Labels):
@@ -253,7 +258,7 @@ def GetYFromStringLabels(Labels):
     return Y
 
 
-def preprocessData():
+def PreprocessData():
     polarity = []
     text = []
     tree = ET.parse('Restaurants_Train.xml')
@@ -264,11 +269,11 @@ def preprocessData():
         content = sentence.find('text').text.translate(string.maketrans("", ""), string.punctuation)
         for aspectTerms in sentence.iter('aspectTerms'):
             for aspectTerm in aspectTerms.iter('aspectTerm'):
-                text.append(sentence_transform(content, aspectTerm.get('term').translate(string.maketrans("", ""),
-                                                                                         string.punctuation),
-                                               aspectTerm.get("from"), aspectTerm.get("to"), 10))
+                text.append(SentenceTransform(content, aspectTerm.get('term').translate(string.maketrans("", ""),
+                                                                                        string.punctuation),
+                                              aspectTerm.get("from"), aspectTerm.get("to"), 10))
                 polarity.append(aspectTerm.get("polarity"))
-    LexFeats = [lexicon_feature(sent) for sent in text]
+    LexFeats = [LexiconFeatures(sent) for sent in text]
     LexFeats = np.array(LexFeats)
     LexFeats = csr_matrix(LexFeats)
     cv = CountVectorizer(dtype=np.float64, binary=False, max_df=0.95, stop_words=stopwords)
@@ -280,8 +285,14 @@ def preprocessData():
 
 
 def main():
+    # sentence = "The lava cake dessert was incredible and I recommend it."
+    # aspect_term = "lava cake dessert"
+    # from_char = 4
+    # to_char = 21
+    # print SentenceTransform(sentence, aspect_term, from_char, to_char,10)
+
     t0 = time()
-    X, Y = preprocessData()
+    X, Y = PreprocessData()
     print "preprocess time:", round(time() - t0, 3), "s"
     for i in xrange(5):
         print 'run ', i + 1
@@ -297,6 +308,7 @@ def main():
         pred = clf.predict(X_test)
         print "predicting time:", round(time() - t0, 3), "s"  # accuracy
         print "accuracy: ", accuracy_score(y_test, pred)
+
 
 
 if __name__ == "__main__":
