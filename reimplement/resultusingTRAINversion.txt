@@ -1,0 +1,43 @@
+The result obtained after run with TRAIN file ( ~3000 sentences ) using parse feats + surface feats + lexicon feats
+
+preprocess time: 5927.514 s
+run  1
+training time: 28.452 s
+best estimator after 5 fold CV:  LinearSVC(C=10, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.001 s
+accuracy:  0.722972972973
+run  2
+training time: 28.336 s
+best estimator after 5 fold CV:  LinearSVC(C=1, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.001 s
+accuracy:  0.713513513514
+run  3
+training time: 29.113 s
+best estimator after 5 fold CV:  LinearSVC(C=1, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.0 s
+accuracy:  0.72027027027
+run  4
+training time: 28.744 s
+best estimator after 5 fold CV:  LinearSVC(C=1, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.0 s
+accuracy:  0.672972972973
+run  5
+training time: 29.199 s
+best estimator after 5 fold CV:  LinearSVC(C=1, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.001 s
+accuracy:  0.687837837838

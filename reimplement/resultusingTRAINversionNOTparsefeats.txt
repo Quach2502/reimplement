@@ -1,0 +1,45 @@
+The result obtained after run with TRAIN file ( ~3000 sentences ) using surface feats + lexicon feats
+
+shape of X matrix before adding lex feats (3699, 46381)
+shape of X matrix after adding lex feats (3699, 46390)
+preprocess time: 426.442 s
+run  1
+training time: 20.781 s
+best estimator after 5 fold CV:  LinearSVC(C=1, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.001 s
+accuracy:  0.718918918919
+run  2
+training time: 20.714 s
+best estimator after 5 fold CV:  LinearSVC(C=1, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.0 s
+accuracy:  0.712162162162
+run  3
+training time: 20.951 s
+best estimator after 5 fold CV:  LinearSVC(C=1, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.0 s
+accuracy:  0.714864864865
+run  4
+training time: 20.4 s
+best estimator after 5 fold CV:  LinearSVC(C=1, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.0 s
+accuracy:  0.709459459459
+run  5
+training time: 20.88 s
+best estimator after 5 fold CV:  LinearSVC(C=1, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.0 s
+accuracy:  0.701351351351

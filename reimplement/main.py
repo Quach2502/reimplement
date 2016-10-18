@@ -8,6 +8,7 @@ from time import time
 from nltk.parse.stanford import StanfordDependencyParser
 from sklearn.svm import LinearSVC
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import Normalizer
 from sklearn.cross_validation import train_test_split
 from sklearn.metrics import accuracy_score
@@ -29,6 +30,8 @@ dep_parser = StanfordDependencyParser(model_path="edu/stanford/nlp/models/lexpar
 # We keep negation words in stop words
 stopwords = [var for var in stopwords.words('english') if var not in ['not', 'isn']]
 
+def Tokenize(text):
+    return nltk.word_tokenize(text)
 
 def NRC_lexicon():
     with open('NRC-emotion-lexicon-wordlevel-alphabetized-v0.92.txt', 'r') as f:
@@ -144,7 +147,7 @@ def ParseContext(sentence, aspect_term, from_char, to_char):
         parse_context_fromIndex = nx.single_source_shortest_path_length(G, source_fromIndex, cutoff=3)
         for each in parse_context_fromIndex.keys():
             condition = int(each)
-            if (condition > 0 and (condition <= (from_index+1) or condition >= (to_index+1))):
+            if (condition > 0 and (condition <= (from_index + 1) or condition >= (to_index + 1))):
                 context.append(name_attribute[each])
         if to_index != from_index:
             parse_context_toIndex = nx.single_source_shortest_path_length(G, source_toIndex, cutoff=3)
@@ -153,9 +156,10 @@ def ParseContext(sentence, aspect_term, from_char, to_char):
                 if (condition > 0 and (condition < (from_index + 1) or condition > (to_index + 1))):
                     context.append(name_attribute[each])
     except:
-        print "The sentence cannot be processed: ",sentence
+        print "The sentence cannot be processed: ", sentence
         pass
-    return list(set(context))  # Return the nodes (words) in the parse tree that are connected to the aspect term by at most three edges
+    return list(set(
+        context))  # Return the nodes (words) in the parse tree that are connected to the aspect term by at most three edges
 
 
 def LexiconFeatures(sentence):
@@ -224,7 +228,7 @@ def ParseFeatures(sentence, aspect_term, from_char, to_char):
     for each in postag:
         dict_postag[each[0]] = each[1]
     for each in parseContext:
-        result.append(each + '_'+ dict_postag[each]) # Word_POSTAG in the parse context
+        result.append(each + '_' + dict_postag[each])  # Word_POSTAG in the parse context
     slice = sentence.partition(aspect_term)
     for word in parseContext:
         # Determine whether the word is before or after the aspect term to form the correct bigrams context target
@@ -239,7 +243,7 @@ def SentenceTransform(sentence, aspect_term, from_char, to_char, window_size):
     surface_feats = SurfaceFeatures(sentence, aspect_term, from_char, to_char, window_size)
     parse_feats = ParseFeatures(sentence, aspect_term, from_char, to_char)
     return ' '.join(surface_feats + parse_feats)
-
+    # return ' '.join(surface_feats)
 
 
 def GetYFromStringLabels(Labels):
@@ -276,20 +280,25 @@ def PreprocessData():
     LexFeats = [LexiconFeatures(sent) for sent in text]
     LexFeats = np.array(LexFeats)
     LexFeats = csr_matrix(LexFeats)
-    cv = CountVectorizer(dtype=np.float64, binary=False, max_df=0.95, stop_words=stopwords)
+    cv = CountVectorizer(tokenizer=Tokenize, dtype=np.float64, binary=False, max_df=0.95, stop_words=stopwords)
     Y = GetYFromStringLabels(polarity)
     X = cv.fit_transform(text)
     X = Normalizer().fit_transform(X)
+    print 'shape of X matrix before adding lex feats', X.shape
     X = hstack([X, LexFeats])
+    print 'shape of X matrix after adding lex feats', X.shape
     return X, Y
 
 
 def main():
-    # sentence = "The lava cake dessert was incredible and I recommend it."
-    # aspect_term = "lava cake dessert"
-    # from_char = 4
-    # to_char = 21
-    # print SentenceTransform(sentence, aspect_term, from_char, to_char,10)
+    # Test for 1 sample sentence
+    # sentence = "If you like your music blasted and the system isnt that great and if you want to pay at least 100 dollar bottle minimum then you'll love it here."
+    # sentence = sentence.translate(string.maketrans("", ""), string.punctuation)
+    # aspect_term = "bottle minimum"
+    # from_char = 105
+    # to_char = 119
+    # print len(SentenceTransform(sentence, aspect_term, from_char, to_char,10).split())
+
 
     t0 = time()
     X, Y = PreprocessData()
@@ -308,7 +317,6 @@ def main():
         pred = clf.predict(X_test)
         print "predicting time:", round(time() - t0, 3), "s"  # accuracy
         print "accuracy: ", accuracy_score(y_test, pred)
-
 
 
 if __name__ == "__main__":
