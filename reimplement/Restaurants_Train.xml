@@ -5507,10 +5507,10 @@
         </aspectCategories>
     </sentence>
     <sentence id="1152">
-        <text>If you like your music blasted and the system isnt that great and if you want to pay at least 100 dollar bottle minimun then you'll love it here.</text>
+        <text>If you like your music blasted and the system isnt that great and if you want to pay at least 100 dollar bottle minimum then you'll love it here.</text>
         <aspectTerms>
             <aspectTerm term="music" polarity="negative" from="17" to="22"/>
-            <aspectTerm term="bottle minimun" polarity="negative" from="105" to="119"/>
+            <aspectTerm term="bottle minimum" polarity="negative" from="105" to="119"/>
         </aspectTerms>
         <aspectCategories>
             <aspectCategory category="ambience" polarity="negative"/>

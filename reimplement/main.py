@@ -153,7 +153,7 @@ def ParseContext(sentence, aspect_term, from_char, to_char):
                 if (condition > 0 and (condition < (from_index + 1) or condition > (to_index + 1))):
                     context.append(name_attribute[each])
     except:
-        print sentence
+        print "The sentence cannot be processed: ",sentence
         pass
     return list(set(context))  # Return the nodes (words) in the parse tree that are connected to the aspect term by at most three edges
 
@@ -236,10 +236,10 @@ def ParseFeatures(sentence, aspect_term, from_char, to_char):
 
 
 def SentenceTransform(sentence, aspect_term, from_char, to_char, window_size):
-    # surface_feats = SurfaceFeatures(sentence, aspect_term, from_char, to_char, window_size)
+    surface_feats = SurfaceFeatures(sentence, aspect_term, from_char, to_char, window_size)
     parse_feats = ParseFeatures(sentence, aspect_term, from_char, to_char)
-    # return ' '.join(surface_feats + parse_feats)
-    return ' '.join(parse_feats)
+    return ' '.join(surface_feats + parse_feats)
+
 
 
 def GetYFromStringLabels(Labels):
