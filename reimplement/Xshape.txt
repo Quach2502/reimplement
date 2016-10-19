@@ -1,0 +1,43 @@
+shape of X matrix before adding lex feats (3699, 53727)
+shape of X matrix after adding lex feats (3699, 53736)
+preprocess time: 5802.076 s
+run  1
+training time: 26.396 s
+best estimator after 5 fold CV:  LinearSVC(C=1, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.0 s
+accuracy:  0.672972972973
+run  2
+training time: 24.938 s
+best estimator after 5 fold CV:  LinearSVC(C=1, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.0 s
+accuracy:  0.697297297297
+run  3
+training time: 26.254 s
+best estimator after 5 fold CV:  LinearSVC(C=1, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.0 s
+accuracy:  0.683783783784
+run  4
+training time: 26.412 s
+best estimator after 5 fold CV:  LinearSVC(C=1, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.0 s
+accuracy:  0.697297297297
+run  5
+training time: 26.594 s
+best estimator after 5 fold CV:  LinearSVC(C=1, class_weight='balanced', dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+predicting time: 0.0 s
+accuracy:  0.725675675676
