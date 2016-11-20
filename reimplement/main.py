@@ -23,7 +23,7 @@ from random import randint
 # Set up JAVAHOME to jre , CLASSPATH environment variable to run
 # Example in this machine:
 # CLASSPATH = D:\stanford-parser-full-2015-12-09\stanford-parser-full-2015-12-09\stanford-parser.jar;D:\stanford-parser-full-2015-12-09\stanford-parser-full-2015-12-09\stanford-parser-3.6.0-models.jar
-# JAVAHOME = C:\Program Files\Java\jre1.8.0_102\bin
+# JAVAHOME = C:\Program Files\Java\jre1.8.0_111\bin
 
 dep_parser = StanfordDependencyParser(model_path="edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz")
 
@@ -132,8 +132,10 @@ def ParseContext(sentence, aspect_term, from_char, to_char):
     for each in dep.to_dot().split("\n")[4:-1]:  # Use index [4:-1] to get the text only
         # Convert the input from unicode to text
         each = str(each)
+        #print each
         # Remove all the punctuations except ">","=" to identify the relationship in the graph
         each = each.translate(string.maketrans("", ""), string.punctuation.replace(">", "").replace("=", ""))
+        # print each
         # If there is ">" the text is about the relationship( edge)
         if ">" in each:
             relationship = each.split("=")[-1]
@@ -242,7 +244,7 @@ def ParseFeatures(sentence, aspect_term, from_char, to_char):
 def SentenceTransform(sentence, aspect_term, from_char, to_char, window_size):
     surface_feats = SurfaceFeatures(sentence, aspect_term, from_char, to_char, window_size)
     parse_feats = ParseFeatures(sentence, aspect_term, from_char, to_char)
-    return ' '.join(surface_feats + parse_feats)
+    return ' '.join(parse_feats + surface_feats)
     # return ' '.join(surface_feats)
 
 
@@ -292,31 +294,31 @@ def PreprocessData():
 
 def main():
     # Test for 1 sample sentence
-    # sentence = "If you like your music blasted and the system isnt that great and if you want to pay at least 100 dollar bottle minimum then you'll love it here."
-    # sentence = sentence.translate(string.maketrans("", ""), string.punctuation)
-    # aspect_term = "bottle minimum"
-    # from_char = 105
-    # to_char = 119
-    # print len(SentenceTransform(sentence, aspect_term, from_char, to_char,10).split())
+    sentence = "If you like your music blasted and the system isnt that great and if you want to pay at least 100 dollar bottle minimum then you'll love it here."
+    sentence = sentence.translate(string.maketrans("", ""), string.punctuation)
+    aspect_term = "bottle minimum"
+    from_char = 105
+    to_char = 119
+    print (SentenceTransform(sentence, aspect_term, from_char, to_char,10))
 
 
-    t0 = time()
-    X, Y = PreprocessData()
-    print "preprocess time:", round(time() - t0, 3), "s"
-    for i in xrange(5):
-        print 'run ', i + 1
-        Params = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000]}
-        X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=randint(0, 100))
-        clf = grid_search.GridSearchCV(LinearSVC(class_weight='balanced'), Params, cv=3)
-        t0 = time()
-        clf.fit(X_train, y_train)
-        print "training time:", round(time() - t0, 3), "s"
-        print 'best estimator after 5 fold CV: ', clf.best_estimator_
-        # predict
-        t0 = time()
-        pred = clf.predict(X_test)
-        print "predicting time:", round(time() - t0, 3), "s"  # accuracy
-        print "accuracy: ", accuracy_score(y_test, pred)
+    # t0 = time()
+    # X, Y = PreprocessData()
+    # print "preprocess time:", round(time() - t0, 3), "s"
+    # for i in xrange(5):
+    #     print 'run ', i + 1
+    #     Params = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000]}
+    #     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=randint(0, 100))
+    #     clf = grid_search.GridSearchCV(LinearSVC(class_weight='balanced'), Params, cv=3)
+    #     t0 = time()
+    #     clf.fit(X_train, y_train)
+    #     print "training time:", round(time() - t0, 3), "s"
+    #     print 'best estimator after 5 fold CV: ', clf.best_estimator_
+    #     # predict
+    #     t0 = time()
+    #     pred = clf.predict(X_test)
+    #     print "predicting time:", round(time() - t0, 3), "s"  # accuracy
+    #     print "accuracy: ", accuracy_score(y_test, pred)
 
 
 if __name__ == "__main__":
