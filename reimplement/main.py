@@ -280,9 +280,9 @@ def PreprocessData():
     LexFeats = [LexiconFeatures(sent) for sent in text]
     LexFeats = np.array(LexFeats)
     LexFeats = csr_matrix(LexFeats)
-    cv = CountVectorizer(tokenizer=Tokenize, dtype=np.float64, binary=False, max_df=0.95, stop_words=stopwords)
+    cv = CountVectorizer(tokenizer=Tokenize, dtype=np.float64, binary=False, stop_words=stopwords)
     Y = GetYFromStringLabels(polarity)
-    X = cv.fit_transform(text)
+    X = cv.fit_transform(text).toarray()
     X = Normalizer().fit_transform(X)
     print 'shape of X matrix before adding lex feats', X.shape
     X = hstack([X, LexFeats])
@@ -291,32 +291,40 @@ def PreprocessData():
 
 
 def main():
-    # Test for 1 sample sentence
-    # sentence = "If you like your music blasted and the system isnt that great and if you want to pay at least 100 dollar bottle minimum then you'll love it here."
-    # sentence = sentence.translate(string.maketrans("", ""), string.punctuation)
-    # aspect_term = "bottle minimum"
-    # from_char = 105
-    # to_char = 119
-    # print len(SentenceTransform(sentence, aspect_term, from_char, to_char,10).split())
+    # # Test for 1 sample sentence
+    cv = CountVectorizer(tokenizer = Tokenize,dtype=np.float64, binary=False)
+    sentence = ["Pair you food with the excellent beers on tap or their well priced wine list."]
+    sentence[0] = sentence[0].translate(string.maketrans("", ""), string.punctuation)
+    aspect_term = "food"
+    from_char = 9
+    to_char = 13
+    sentence[0] = SentenceTransform(sentence[0], aspect_term, from_char, to_char, 10)
+    X = cv.fit_transform(sentence)
+    X = Normalizer().fit_transform(X)
+    print X.toarray()
+    print cv.get_feature_names()
+    print X.shape
 
 
-    t0 = time()
-    X, Y = PreprocessData()
-    print "preprocess time:", round(time() - t0, 3), "s"
-    for i in xrange(5):
-        print 'run ', i + 1
-        Params = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000]}
-        X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=randint(0, 100))
-        clf = grid_search.GridSearchCV(LinearSVC(class_weight='balanced'), Params, cv=3)
-        t0 = time()
-        clf.fit(X_train, y_train)
-        print "training time:", round(time() - t0, 3), "s"
-        print 'best estimator after 5 fold CV: ', clf.best_estimator_
-        # predict
-        t0 = time()
-        pred = clf.predict(X_test)
-        print "predicting time:", round(time() - t0, 3), "s"  # accuracy
-        print "accuracy: ", accuracy_score(y_test, pred)
+
+    # t0 = time()
+    # X, Y = PreprocessData()
+    # print "preprocess time:", round(time() - t0, 3), "s"
+    # for i in xrange(5):
+    #     print 'run ', i + 1
+    #     Params = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000]}
+    #     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=randint(0, 100))
+    #     # X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2)
+    #     clf = grid_search.GridSearchCV(LinearSVC(class_weight='balanced'), Params, cv=3)
+    #     t0 = time()
+    #     clf.fit(X_train, y_train)
+    #     print "training time:", round(time() - t0, 3), "s"
+    #     print 'best estimator after 5 fold CV: ', clf.best_estimator_
+    #     # predict
+    #     t0 = time()
+    #     pred = clf.predict(X_test)
+    #     print "predicting time:", round(time() - t0, 3), "s"  # accuracy
+    #     print "accuracy: ", accuracy_score(y_test, pred)
 
 
 if __name__ == "__main__":
