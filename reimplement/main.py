@@ -18,6 +18,8 @@ from scipy.sparse import csr_matrix
 from scipy.sparse import hstack
 from sklearn import grid_search
 from random import randint
+from pprint import pprint
+from copy import deepcopy
 
 # Call Stanford Parser by nltk, set up is follow the link http://stackoverflow.com/questions/13883277/stanford-parser-and-nltk
 # Set up JAVAHOME to jre , CLASSPATH environment variable to run
@@ -208,7 +210,7 @@ def SurfaceFeatures(sentence, aspect_term, from_char, to_char, window_size):
     for i in range(0, len(window)):
         result.append(window[i])
     for i in range(0, len(window)):
-        # Determine whether the word is before or after the aspect term to form the correct bigrams context target
+        # Determine whether the word is before or after the aspect term to form the correct bigrams context target (ct)
         if window[i] in slice[0]:
             result.append(window[i] + "_" + aspect_term + "_ct")
         elif window[i] in slice[2]:
@@ -217,6 +219,7 @@ def SurfaceFeatures(sentence, aspect_term, from_char, to_char, window_size):
     for bigram in bigrams:
         result.append(bigram[0] + "_" + bigram[1])
     result.append(aspect_term + "_at")
+    # aspect term(at)
     return result  # Return a list of surface features
 
 
@@ -243,9 +246,9 @@ def ParseFeatures(sentence, aspect_term, from_char, to_char):
 
 def SentenceTransform(sentence, aspect_term, from_char, to_char, window_size):
     surface_feats = SurfaceFeatures(sentence, aspect_term, from_char, to_char, window_size)
-    parse_feats = ParseFeatures(sentence, aspect_term, from_char, to_char)
-    return ' '.join(parse_feats + surface_feats)
-    # return ' '.join(surface_feats)
+    # parse_feats = ParseFeatures(sentence, aspect_term, from_char, to_char)
+    # return ' '.join(parse_feats + surface_feats)
+    return ' '.join(surface_feats)
 
 
 def GetYFromStringLabels(Labels):
@@ -284,62 +287,93 @@ def PreprocessData():
     LexFeats = csr_matrix(LexFeats)
     cv = CountVectorizer(tokenizer=Tokenize, dtype=np.float64, binary=False, stop_words=stopwords)
     Y = GetYFromStringLabels(polarity)
-    X = cv.fit_transform(text).toarray()
+    X = cv.fit_transform(text)
     X = Normalizer().fit_transform(X)
     print 'shape of X matrix before adding lex feats', X.shape
     X = hstack([X, LexFeats])
     print 'shape of X matrix after adding lex feats', X.shape
-    return X, Y
+    Vocab = cv.get_feature_names() +['HLPos', 'HLNeg', 'HLSum', 'NrcPos', 'NrcNeg', 'NrcSum', 'SubjPos',
+                                               'SubjNeg', 'SubjSum']
+    return X, Y, Vocab
 
+
+def GetTopN(W, Vocab, N=20):
+    FeatsAndVocab = zip(W.tolist(), Vocab)
+    FeatsAndVocab.sort()
+    FeatsAndVocab.reverse()
+    return FeatsAndVocab[:N]
+
+
+def AnalyseClassifierFeats(Classifier, Vocab, TopN=20):
+    W = deepcopy(Classifier.coef_)
+    NegW = W[0, :]
+    NeuW = W[1, :]
+    PosW = W[2, :]
+
+    TopNeg = GetTopN(NegW, Vocab, TopN)
+    TopNeu = GetTopN(NeuW, Vocab, TopN)
+    TopPos = GetTopN(PosW, Vocab, TopN)
+    # TopConf =  GetTopN(ConfW, Vocab, TopN)
+    # return TopNeg, TopNeu, TopPos, TopConf
+    return TopNeg, TopNeu,TopPos
 
 def main():
-<<<<<<< HEAD
     # Test for 1 sample sentence
-    sentence = "If you like your music blasted and the system isnt that great and if you want to pay at least 100 dollar bottle minimum then you'll love it here."
-    sentence = sentence.translate(string.maketrans("", ""), string.punctuation)
-    aspect_term = "bottle minimum"
-    from_char = 105
-    to_char = 119
-    print (SentenceTransform(sentence, aspect_term, from_char, to_char,10))
-=======
-    # # Test for 1 sample sentence
-    cv = CountVectorizer(tokenizer = Tokenize,dtype=np.float64, binary=False)
-    sentence = ["Pair you food with the excellent beers on tap or their well priced wine list."]
-    sentence[0] = sentence[0].translate(string.maketrans("", ""), string.punctuation)
-    aspect_term = "food"
-    from_char = 9
-    to_char = 13
-    sentence[0] = SentenceTransform(sentence[0], aspect_term, from_char, to_char, 10)
-    X = cv.fit_transform(sentence)
-    X = Normalizer().fit_transform(X)
-    print X.toarray()
-    print cv.get_feature_names()
-    print X.shape
-
->>>>>>> d4bfaec94c0cbf24554d2c985888db4a0efd6881
+    # sentence = "If you like your music blasted and the system isnt that great and if you want to pay at least 100 dollar bottle minimum then you'll love it here."
+    # sentence = sentence.translate(string.maketrans("", ""), string.punctuation)
+    # aspect_term = "bottle minimum"
+    # from_char = 105
+    # to_char = 119
+    # print (SentenceTransform(sentence, aspect_term, from_char, to_char,10))
+    # # # Test for 1 sample sentence
+    # cv = CountVectorizer(tokenizer = Tokenize,dtype=np.float64, binary=False)
+    # sentence = ["Pair you food with the excellent beers on tap or their well priced wine list."]
+    # sentence[0] = sentence[0].translate(string.maketrans("", ""), string.punctuation)
+    # aspect_term = "food"
+    # from_char = 9
+    # to_char = 13
+    # sentence[0] = SentenceTransform(sentence[0], aspect_term, from_char, to_char, 10)
+    # X = cv.fit_transform(sentence)
+    # X = Normalizer().fit_transform(X)
+    # print X.toarray()
+    # print cv.get_feature_names()
+    # print X.shape
 
 
-    # t0 = time()
-    # X, Y = PreprocessData()
-    # print "preprocess time:", round(time() - t0, 3), "s"
-    # for i in xrange(5):
-    #     print 'run ', i + 1
-    #     Params = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000]}
-    #     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=randint(0, 100))
-<<<<<<< HEAD
-=======
-    #     # X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2)
->>>>>>> d4bfaec94c0cbf24554d2c985888db4a0efd6881
-    #     clf = grid_search.GridSearchCV(LinearSVC(class_weight='balanced'), Params, cv=3)
-    #     t0 = time()
-    #     clf.fit(X_train, y_train)
-    #     print "training time:", round(time() - t0, 3), "s"
-    #     print 'best estimator after 5 fold CV: ', clf.best_estimator_
-    #     # predict
-    #     t0 = time()
-    #     pred = clf.predict(X_test)
-    #     print "predicting time:", round(time() - t0, 3), "s"  # accuracy
-    #     print "accuracy: ", accuracy_score(y_test, pred)
+
+    t0 = time()
+    X, Y, Vocab = PreprocessData()
+    TopN = 20 # return top 20 the most impact features
+    print "preprocess time:", round(time() - t0, 3), "s"
+    for i in xrange(1):
+        print 'run ', i + 1
+        print
+        Params = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000]}
+        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=randint(0, 100))
+        # X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2)
+        clf = grid_search.GridSearchCV(LinearSVC(class_weight='balanced'), Params, cv=3)
+        # clf = LinearSVC(C=1)
+        t0 = time()
+        clf.fit(X_train, Y_train)
+        print "training time:", round(time() - t0, 3), "s"
+        print 'best estimator after 5 fold CV: ', clf.best_estimator_
+        # predict
+        t0 = time()
+        pred = clf.predict(X_test)
+        print "predicting time:", round(time() - t0, 3), "s"  # accuracy
+        print "accuracy: ", accuracy_score(Y_test, pred)
+        # print the most impact features
+        TopNeg, TopNeu, TopPos = AnalyseClassifierFeats(clf.best_estimator_, Vocab, TopN)
+        print '*' * 80
+        print 'top {} pos feats: '.format(TopN);
+        pprint(TopPos);
+        print '*' * 80
+        print 'top {} neg feats: '.format(TopN);
+        pprint(TopNeg);
+        print '*' * 80
+        print 'top {} neu feats: '.format(TopN);
+        pprint(TopNeu);
+        print '*' * 80
 
 
 if __name__ == "__main__":
