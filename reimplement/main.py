@@ -6,10 +6,9 @@ import os
 import inspect
 import numpy as np
 import sys
-from multiprocessing import freeze_support
+import time
 import networkx as nx
 from nltk import ngrams
-import time
 from nltk.parse.stanford import StanfordDependencyParser
 from sklearn.svm import LinearSVC
 from sklearn.feature_extraction.text import CountVectorizer
@@ -372,7 +371,6 @@ def SentenceTransform(sentence, aspect_term, from_char, to_char, window_size,fea
     else:
         return ' '.join(surface_feats)
 
-
 def GetYFromStringLabels(Labels):
     Y = []
     for L in Labels:
@@ -388,24 +386,29 @@ def GetYFromStringLabels(Labels):
             Y.append(0)
     return Y
 
-
 def PreprocessData(DataDirectory="",PickleDirectory = "",filePickle ="",filename = "",mode_pickle = 0,features = 2):
     if mode_pickle != 2:
+        fail_sentence = 0
         polarity = []
         text = []
         # tree = ET.parse('C:/Users/admin/reimplement/reimplement/Data/Restaurants_Train.xml')
         tree = ET.parse(DataDirectory)
         root = tree.getroot()
         for sentence in root.findall('sentence'):
-            if sentence.find('aspectTerms') is None:
-                continue
-            content = sentence.find('text').text.translate(string.maketrans("", ""), string.punctuation)
-            for aspectTerms in sentence.iter('aspectTerms'):
-                for aspectTerm in aspectTerms.iter('aspectTerm'):
-                    text.append(SentenceTransform(content, aspectTerm.get('term').translate(string.maketrans("", ""),
-                                                                                            string.punctuation),
-                                                  aspectTerm.get("from"), aspectTerm.get("to"), 10,features))
-                    polarity.append(aspectTerm.get("polarity"))
+            try:
+                if sentence.find('aspectTerms') is None:
+                    continue
+                content = sentence.find('text').text.translate(string.maketrans("", ""), string.punctuation)
+                for aspectTerms in sentence.iter('aspectTerms'):
+                    for aspectTerm in aspectTerms.iter('aspectTerm'):
+                        text.append(SentenceTransform(content, aspectTerm.get('term').translate(string.maketrans("", ""),
+                                                                                                string.punctuation),
+                                                      aspectTerm.get("from"), aspectTerm.get("to"), 10,features))
+                        polarity.append(aspectTerm.get("polarity"))
+            except:
+                fail_sentence += 1
+                pass
+        print "The number of sentences which cannot be processed: ",fail_sentence
         LexFeats = [LexiconFeatures(sent) for sent in text]
         LexFeats = np.array(LexFeats)
         LexFeats = csr_matrix(LexFeats)
@@ -479,8 +482,8 @@ def main(temp,DataDirectory="",PickleDirectory="",OutputDirectory=""):
     #     "If you like your music blasted and the system isnt that great and if you want to pay at least 100 dollar bottle minimum then you'll love it here.",
     #     "bottle minimum", 105, 119,10)
     # print SentenceTransform(
-    #     "If you like your music blasted and the system isnt that great and if you want to pay at least 100 dollar bottle minimum then you'll love it here.",
-    #     "bottle minimum", 105, 119,10)
+    #     " I would  rather spend my money on a computer that costs more then a Toshiba that  isn't good at all.",
+    #     "costs", 52, 57,10,3)
     DataFiles = os.listdir(DataDirectory)
     PickleFiles = os.listdir(PickleDirectory)
     filePickle =""
@@ -562,5 +565,4 @@ if __name__ == "__main__":
     # OutputDirectory = C:/Users/admin/reimplement/reimplement/Output
     main(*sys.argv)
     # test = 0
-    # main(test,DataDirectory="C:/Users/admin/reimplement/reimplement/Data",PickleDirectory= "C:/Users/admin/reimplement/reimplement/Pickle")
-
+    # main(test,DataDirectory="C:/Users/admin/reimplement/reimplement/Data",PickleDirectory= "C:/Users/admin/reimplement/reimplement/Pickle",OutputDirectory = "C:/Users/admin/reimplement/reimplement/Output")
