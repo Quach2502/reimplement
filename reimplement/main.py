@@ -25,12 +25,6 @@ from random import randint
 from pprint import pprint
 from copy import deepcopy
 
-# Call Stanford Parser by nltk, set up is follow the link http://stackoverflow.com/questions/13883277/stanford-parser-and-nltk
-# Set up JAVAHOME to jre , CLASSPATH environment variable to run
-# Example in this machine:
-# CLASSPATH = D:\stanford-parser-full-2015-12-09\stanford-parser-full-2015-12-09\stanford-parser.jar;D:\stanford-parser-full-2015-12-09\stanford-parser-full-2015-12-09\stanford-parser-3.6.0-models.jar
-# JAVAHOME = C:\Program Files\Java\jre1.8.0_111\bin
-
 dep_parser = StanfordDependencyParser(model_path="edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz")
 
 # We keep negation words in stop words
